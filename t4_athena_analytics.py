@@ -34,24 +34,24 @@ with DAG(
     tags=["data lake", "aggregated", "gold"],
 ) as dag:
 
-    athena_ctas_submit_category = AWSAthenaOperator(
+    athena_ctas_genre = AWSAthenaOperator(
         task_id="athena_ctas_genre", query=Athena_query.AGG_SONG_BY_GENRE
     )
 
-    athena_ctas_submit_date = AWSAthenaOperator(
+    athena_ctas_date = AWSAthenaOperator(
         task_id="athena_ctas_date", query=Athena_query.AGG_SONG_BY_DATE
     )
 
-    athena_query_by_date = AWSAthenaOperator(
+    athena_query_by_genre = AWSAthenaOperator(
         task_id="athena_query_by_genre", query="sql/query.sql"
     )
 
     list_glue_tables = BashOperator(
         task_id="list_glue_tables",
-        bash_command="""aws glue get-tables --database-name spotify \
+        bash_command="""aws glue get-tables --database-name spotify_db \
                           --query 'TableList[].Name' --expression "agg_*"  \
                           --output table""",
     )
 
 
-    (athena_ctas_submit_category >> athena_ctas_submit_date)>>athena_query_by_date >> list_glue_tables
+    (athena_ctas_genre >> athena_ctas_date)>>athena_query_by_genre >> list_glue_tables
